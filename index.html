@@ -57,7 +57,7 @@
     <button onclick="startRecording()">🎤 Start Speaking</button>
     <p id="speechText">Waiting for speech...</p>
     <script>
-        const flask_server = "http://192.168.1.9:5000";  // Update with your Flask server URL
+        const flask_server = "https://esp32-webserver-smj3.onrender.com/";  // Update with your Flask server URL
 
         function startRecording() {
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
