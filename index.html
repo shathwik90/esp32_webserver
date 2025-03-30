@@ -3,45 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice to ESP32</title>
+    <title>ESP32 Voice Recognition</title>
     <style>
-        body { text-align: center; font-family: Arial; padding: 20px; }
-        button { font-size: 20px; padding: 10px; cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #4a90e2, #9013fe);
+            color: white;
+            text-align: center;
+            margin: 0;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button:hover {
+            background-color: #e91e63;
+            transform: scale(1.05);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #speechText {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>🎤 Speak & Send to ESP32</h1>
-    <button onclick="startRecognition()">Start Speaking</button>
-    <p id="output">Waiting for speech...</p>
-
+    <h1>ESP32 Speech Recognition</h1>
+    <button onclick="startRecording()">🎤 Start Speaking</button>
+    <p id="speechText">Waiting for speech...</p>
     <script>
-        const esp32_ip = "http://192.168.1.12";  // Change this to your ESP32's IP
+        const flask_server = "http://192.168.1.9:5000";  // Update with your Flask server URL
 
-        function startRecognition() {
+        function startRecording() {
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = "en-US";
+            recognition.onresult = event => {
+                let speechText = event.results[0][0].transcript;
+                document.getElementById("speechText").textContent = "You said: " + speechText;
+                fetch(flask_server + "/speech", {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain" },
+                    body: speechText
+                }).then(response => response.text())
+                  .then(data => console.log("Flask Response:", data))
+                  .catch(error => console.error("Error:", error));
+            };
             recognition.start();
-
-            recognition.onresult = function(event) {
-                const speechText = event.results[0][0].transcript;
-                document.getElementById("output").innerText = "You said: " + speechText;
-                sendToESP32(speechText);
-            };
-
-            recognition.onerror = function(event) {
-                console.error("Speech recognition error:", event);
-            };
-        }
-
-        function sendToESP32(text) {
-            fetch(esp32_ip + "/speech", {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: text
-            })
-            .then(response => response.text())
-            .then(data => console.log("ESP32 Response:", data))
-            .catch(error => console.error("Error sending to ESP32:", error));
         }
     </script>
 </body>
