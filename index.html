@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to ESP32</title>
+    <style>
+        body { text-align: center; font-family: Arial; padding: 20px; }
+        button { font-size: 20px; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🎤 Speak & Send to ESP32</h1>
+    <button onclick="startRecognition()">Start Speaking</button>
+    <p id="output">Waiting for speech...</p>
+
+    <script>
+        const esp32_ip = "http://192.168.1.12";  // Change this to your ESP32's IP
+
+        function startRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const speechText = event.results[0][0].transcript;
+                document.getElementById("output").innerText = "You said: " + speechText;
+                sendToESP32(speechText);
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event);
+            };
+        }
+
+        function sendToESP32(text) {
+            fetch(esp32_ip + "/speech", {
+                method: "POST",
+                headers: { "Content-Type": "text/plain" },
+                body: text
+            })
+            .then(response => response.text())
+            .then(data => console.log("ESP32 Response:", data))
+            .catch(error => console.error("Error sending to ESP32:", error));
+        }
+    </script>
+</body>
+</html>
