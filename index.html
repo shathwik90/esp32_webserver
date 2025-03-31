@@ -57,14 +57,14 @@
     <button onclick="startRecording()">🎤 Start Speaking</button>
     <p id="speechText">Waiting for speech...</p>
     <script>
-        const flask_server = "https://esp32-webserver-smj3.onrender.com/";  // Update with your Flask server URL
+        const flask_server = "http://192.168.1.12";  // Update with your Flask server URL
 
         function startRecording() {
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.onresult = event => {
                 let speechText = event.results[0][0].transcript;
                 document.getElementById("speechText").textContent = "You said: " + speechText;
-                fetch(flask_server + "/speech", {
+                fetch(flask_server, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain" },
                     body: speechText

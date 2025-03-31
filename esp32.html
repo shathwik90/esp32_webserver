@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to ESP32</title>
+</head>
+<body>
+    <h1>Speech to ESP32</h1>
+    <button id="start-btn">🎤 Start Recording</button>
+    <p id="status">Press the button and speak...</p>
+    <p><strong>Transcription:</strong> <span id="transcript"></span></p>
+
+    <script>
+        const startBtn = document.getElementById("start-btn");
+        const statusText = document.getElementById("status");
+        const transcriptText = document.getElementById("transcript");
+        
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = false;
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        
+        recognition.onstart = function() {
+            statusText.textContent = "Listening...";
+        };
+
+        recognition.onresult = function(event) {
+            let transcript = event.results[0][0].transcript;
+            transcriptText.textContent = transcript;
+            statusText.textContent = "Sending to ESP32...";
+            sendToESP32(transcript);
+        };
+
+        recognition.onerror = function(event) {
+            statusText.textContent = "Error: " + event.error;
+        };
+
+        startBtn.addEventListener("click", function() {
+            recognition.start();
+        });
+
+        function sendToESP32(text) {
+            fetch("http://192.168.1.12/speech", {  // Replace <ESP32-IP> with actual ESP32 IP
+                method: "POST",
+                headers: { "Content-Type": "text/plain" },
+                body: text
+            })
+            .then(response => response.text())
+            .then(data => {
+                statusText.textContent = "ESP32 Response: " + data;
+            })
+            .catch(error => {
+                statusText.textContent = "Failed to send: " + error;
+            });
+        }
+    </script>
+</body>
+</html>
